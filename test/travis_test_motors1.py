@@ -3,10 +3,10 @@
 import unittest, rostest
 import rosnode, rospy
 import time
-from pimouse_ros.msg import MotorFreqs
+from pimouse_ros.msg import MortorFreqs
 from geometry_msgs.msg import Twist
 
-class MotorTest(unittest.testCase):
+class MotorTest(unittest.TestCase):
 	def file_check(self,dev,value,message):
 		with open("/dev/" + dev,"r") as f:
 			self.assertEqual(f.readline(),str(value)+"\n",message)
@@ -16,7 +16,7 @@ class MotorTest(unittest.testCase):
 		self.assertIn('/motors', nodes, "node does not exist")
 
 	def test_put_freq(self):
-		pub = rospy.Publisher('/motor_raw', MotorFreqs)
+		pub = rospy.PUblisher('/motor_raw', MotorFreqs)
 		m = MotorFreqs()
 		m.left_hz = 123
 		m.right_hz = 456
@@ -29,17 +29,21 @@ class MotorTest(unittest.testCase):
 
 	def test_put_cmd_vel(self):
 		pub = rospy.Publisher('/cmd_vel', Twist)
-			m = Twist()
-			m.linear.x = 0.1414
-			m.angular.z = 1.57
-			for i in range(10):
-				pub.publish(m)
-				time.sleep(0.1)
+		m = Twist()
+		m.linear.x = 0.1414
+		m.angular.z = 1.57
+		for i in range(10):
+			pub.publish(m)
+			time.sleep(0.1)
 
-			self.file_check("rtmotor_raw_rO",0,"don't stop after 1[s]")
-			self.file.check("rtmotor_raw_lO",0,"don't stop after 1[s]")
+		self.file_check("rtmotor_raw_lO",200,"wrong left value from cmd_vel")
+		self.file_check("rtmotor_raw_rO",600,"wrong right value from cmd_vel")
+
+		time.sleep(1.1)
+		self.file_check("rtmotor_raw_rO",0,"don't stop after 1[s]")
+		self.file_check("rtmotor_raw_lO",0,"don't stop after 1[s]")
 
 if __name__ == '__main__':
 	time.sleep(3)
 	rospy.init_node('travis_test_motors')
-	rostest.rosrun('pimouse_ros','travis_test_mortors', MotorTest)
+	rostest.rosrun('pimouse_ros','travis_test_motors', MotorTest)
